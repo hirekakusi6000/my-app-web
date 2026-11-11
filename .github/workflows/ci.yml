@@ -1,0 +1,92 @@
+# push とプルリクエストのたびに、型チェック・ビルド・画面の自動テストを実行する。
+name: CI
+
+on:
+  push:
+    branches: [master, develop, "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 型チェック・ビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: 依存ライブラリのインストール
+        run: npm ci
+
+      - name: 移行前の画面の確認（文法・インラインスクリプト）
+        run: npm run check:legacy
+
+      - name: 型チェック（vue-tsc）とビルド（vite build）
+        run: npm run build
+
+  e2e:
+    name: 画面の自動テスト（Playwright）
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # API のリポジトリ。リポジトリの変数（Settings → Variables）で変えられる
+      API_REPOSITORY: ${{ vars.API_REPOSITORY || format('{0}/my-app', github.repository_owner) }}
+      API_REF: ${{ vars.API_REF || 'develop' }}
+      API_DIR: api
+      API_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      # テスト中に起動する API サーバー（FastAPI）
+      # API のリポジトリが非公開のときは、読み取りできるトークンを secrets.API_REPOSITORY_TOKEN に登録する
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.API_REPOSITORY }}
+          ref: ${{ env.API_REF }}
+          path: api
+          token: ${{ secrets.API_REPOSITORY_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: api/requirements.txt
+
+      - name: API の依存ライブラリのインストール
+        run: pip install -r api/requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: 依存ライブラリのインストール
+        run: npm ci
+
+      - name: テスト用ブラウザ（Chromium）のインストール
+        run: npx playwright install --with-deps chromium
+
+      - name: 画面の自動テスト
+        run: npm run test:e2e
+
+      - name: 失敗したときの記録を保存
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7

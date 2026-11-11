@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 組織の設定（マスターのみ）：組織名の変更と、組織の削除。
- * 見た目と動きは Vue に移行する前（frontend/admin/organization.html）と同じ。
+ * 見た目と動きは Vue に移行する前（legacy/admin/organization.html）と同じ。
  */
 import { computed, onMounted, ref, useTemplateRef } from "vue";
 

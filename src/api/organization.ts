@@ -1,4 +1,4 @@
-// 組織の設定の API。通信の共通処理は、まだ移行していない frontend/js/api/client.js を使う。
+// 組織の設定の API。通信の共通処理は、まだ移行していない legacy/js/api/client.js を使う。
 import { api } from "@legacy/js/api/client.js";
 
 import type { Organization } from "@/types/api";

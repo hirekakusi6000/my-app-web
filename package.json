@@ -2,20 +2,25 @@
   "name": "office-seat-manager-web",
   "private": true,
   "version": "0.1.0",
-  "description": "画面（Vue 3 + Vite + TypeScript）。ビルドした結果を FastAPI が配信する",
+  "description": "オフィス座席・従業員管理システムの画面（Vue 3 + Vite + TypeScript）",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "vite build --watch --mode development",
+    "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "typecheck": "vue-tsc --noEmit"
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "check:legacy": "node scripts/check-legacy.mjs",
+    "test:e2e": "npm run build && playwright test"
   },
   "dependencies": {
     "vue": "3.5.45"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.20.5",
     "@vitejs/plugin-vue": "6.0.10",
     "typescript": "5.9.3",
     "vite": "8.3.8",
