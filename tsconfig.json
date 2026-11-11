@@ -4,7 +4,9 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
+    // vite.config.ts から security-headers.ts を拡張子付きで読み込むため
+    "allowImportingTsExtensions": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -15,14 +17,14 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "useDefineForClassFields": true,
-    // まだ移行していない frontend/ の JavaScript も読み込めるようにする（型のチェックはしない）
+    // まだ移行していない legacy/ の JavaScript も読み込めるようにする（型のチェックはしない）
     "allowJs": true,
     "checkJs": false,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@legacy/*": ["../frontend/*"]
+      "@legacy/*": ["legacy/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "e2e/**/*.ts", "*.ts"]
 }

@@ -1,0 +1,18 @@
+# ライブラリとビルド結果
+node_modules/
+dist/
+
+# 画面の自動テスト（Playwright）の結果
+test-results/
+playwright-report/
+
+# エディタ・OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ローカルの設定
+.env
+.env.*
+!.env.example
