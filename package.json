@@ -13,7 +13,10 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "check:legacy": "node scripts/check-legacy.mjs",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "nginx:start": "node scripts/nginx.mjs start",
+    "nginx:stop": "node scripts/nginx.mjs stop",
+    "nginx:reload": "node scripts/nginx.mjs reload"
   },
   "dependencies": {
     "vue": "3.5.45"
