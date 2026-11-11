@@ -13,11 +13,11 @@
 
 ## 起動（Windows / PowerShell）
 
-先に API（`my-app`）を起動しておきます。Node.js 22.12 以上が必要です。
+先に API（`my-app`）を起動しておきます。Node.js 22.12 以上と nginx が必要です（入れ方は `my-app-docs` の `README.md`）。
 
 ```powershell
 npm install
 npm run dev
 ```
 
-ブラウザで http://127.0.0.1:5173 を開きます。
+ブラウザで http://127.0.0.1:8080 を開きます（開発時も公開時と同じ nginx で画面を返します）。

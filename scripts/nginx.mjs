@@ -1,7 +1,8 @@
-// ローカルで nginx を動かし、公開時と同じ構成（nginx が dist/ を返し、/api を FastAPI に転送）を試す。
+// ローカルで nginx を動かす（nginx が dist/ を返し、/api を FastAPI に転送する。公開時と同じ構成）。
+// 普段は npm run dev（scripts/dev.mjs）がこのスクリプトで nginx を起動・停止する。
 //
 // 使い方:
-//   npm run nginx:start    … ビルドした dist/ を http://127.0.0.1:8080 で開けるようにする（先に npm run build と API の起動が必要）
+//   npm run nginx:start    … ビルドした dist/ を http://127.0.0.1:8080 で開けるようにする（先にビルドと API の起動が必要）
 //   npm run nginx:stop     … 止める
 //   npm run nginx:reload   … deploy/nginx/ の設定を変えたあとに読み込み直す
 //
