@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -47,11 +47,11 @@ jobs:
       API_DIR: api
       API_PYTHON: python
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # テスト中に起動する API サーバー（FastAPI）
       # API のリポジトリが非公開のときは、読み取りできるトークンを secrets.API_REPOSITORY_TOKEN に登録する
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ env.API_REPOSITORY }}
           ref: ${{ env.API_REF }}
