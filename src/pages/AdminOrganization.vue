@@ -1,23 +1,13 @@
 <script setup lang="ts">
-/**
- * 組織の設定（マスターのみ）：組織名の変更と、組織の削除。
- * 見た目と動きは Vue に移行する前（legacy/admin/organization.html）と同じ。
- */
+/** 組織の設定（マスターのみ）：組織名の変更と、組織の削除 */
 import { computed, onMounted, ref, useTemplateRef } from "vue";
 
-import { PATHS } from "@legacy/js/lib/auth-guard.js";
-import { showToast } from "@legacy/js/lib/toast.js";
-
-import { organizationApi } from "@/api/organization";
-import { type FormErrors, toFormErrors } from "@/lib/errors";
+import { organizationApi } from "@/api";
+import { PATHS } from "@/lib/auth";
+import { noErrors, toFormErrors } from "@/lib/errors";
+import { currentUser } from "@/lib/session";
+import { showToast } from "@/lib/toast";
 import type { Organization } from "@/types/api";
-
-const emit = defineEmits<{
-  /** 組織名を変更したとき（ヘッダーの表示を更新するため） */
-  renamed: [name: string];
-}>();
-
-const noErrors = (): FormErrors => ({ fields: {}, form: "" });
 
 const organization = ref<Organization | null>(null);
 const createdAt = computed(() =>
@@ -41,10 +31,11 @@ async function rename() {
   try {
     organization.value = await organizationApi.rename(name.value.trim());
     name.value = organization.value.name;
-    emit("renamed", organization.value.name);
+    // ヘッダーの組織名も変える
+    currentUser().organization.name = organization.value.name;
     showToast("組織名を変更しました");
   } catch (err) {
-    renameErrors.value = toFormErrors(err, { name: "組織名は1〜100文字で入力してください" });
+    renameErrors.value = toFormErrors(err, ["name"], { name: "組織名は1〜100文字で入力してください" });
   } finally {
     saving.value = false;
   }
