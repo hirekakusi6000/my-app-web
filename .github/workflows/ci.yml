@@ -30,8 +30,8 @@ jobs:
       - name: 依存ライブラリのインストール
         run: npm ci
 
-      - name: 移行前の画面の確認（文法・インラインスクリプト）
-        run: npm run check:legacy
+      - name: HTML の確認（インラインスクリプトがないこと）
+        run: npm run check:html
 
       - name: 型チェック（vue-tsc）とビルド（vite build）
         run: npm run build

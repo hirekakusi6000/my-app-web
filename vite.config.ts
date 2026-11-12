@@ -1,8 +1,8 @@
 /**
  * 画面のビルドの設定。
  *
- * - Vue に移行した画面：ルートの HTML（例：admin/organization.html）を PAGES に追加する
- * - まだ移行していない画面：legacy/ に置く。そのままの形で dist/ にコピーされ、同じ URL で開ける
+ * - 画面は1ページずつの HTML（マルチページ）。URL と同じパスの HTML（例：admin/users.html）が入口で、
+ *   src/entries/ のスクリプトが Vue の画面（src/pages/）を表示する。画面を追加したら PAGES に追加する
  * - 画面を返すのは、開発時も公開時も nginx（deploy/nginx/）。/api は nginx が FastAPI に転送する
  *   （開発時は npm run dev が nginx を起動し、保存するたびに dist/ を作り直す。Vite の開発サーバーは使わない）
  * - preview（画面の自動テストで使う）だけは Vite が画面を返し、/api を FastAPI に転送する
@@ -14,8 +14,20 @@ import { defineConfig } from "vite";
 
 import { SECURITY_HEADERS } from "./security-headers.ts";
 
-/** Vue に移行した画面（出力先のパス → HTML） */
+/** 画面の一覧（出力先のパス → HTML） */
 const PAGES: Record<string, string> = {
+  index: "index.html",
+  login: "login.html",
+  signup: "signup.html",
+  setup: "setup.html",
+  map: "map.html",
+  people: "people.html",
+  profile: "profile.html",
+  "admin/users": "admin/users.html",
+  "admin/offices": "admin/offices.html",
+  "admin/map-editor": "admin/map-editor.html",
+  "admin/seats": "admin/seats.html",
+  "admin/master-data": "admin/master-data.html",
   "admin/organization": "admin/organization.html",
 };
 
@@ -29,14 +41,11 @@ export default defineConfig(({ mode }) => ({
   base: "/",
   // 1ページずつの HTML（SPA ではない）。存在しない URL は index.html ではなく 404 にする
   appType: "mpa",
-  publicDir: path("legacy"),
+  // そのままコピーするファイルはない
+  publicDir: false,
   plugins: [vue()],
   resolve: {
-    alias: {
-      "@": path("src"),
-      // まだ移行していない共通の部品（ヘッダー・API の呼び出しなど）を Vue の画面からも使う
-      "@legacy": path("legacy"),
-    },
+    alias: { "@": path("src") },
   },
   preview: {
     host: "127.0.0.1",
@@ -50,7 +59,6 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     // 画面のスクリプトは最上位で await を使うため
     target: "es2022",
-    // legacy/ の css・js と名前がぶつからないよう、出力をまとめる
     assetsDir: "assets/vue",
     // 開発時（npm run dev）は、ブラウザの開発者ツールで元の .vue / .ts を見られるようにする
     sourcemap: mode === "development",

@@ -17,13 +17,9 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "useDefineForClassFields": true,
-    // まだ移行していない legacy/ の JavaScript も読み込めるようにする（型のチェックはしない）
-    "allowJs": true,
-    "checkJs": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@legacy/*": ["legacy/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "e2e/**/*.ts", "*.ts"]
