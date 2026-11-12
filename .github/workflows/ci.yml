@@ -58,7 +58,7 @@ jobs:
           path: api
           token: ${{ secrets.API_REPOSITORY_TOKEN || github.token }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
