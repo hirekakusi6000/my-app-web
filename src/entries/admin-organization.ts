@@ -1,4 +1,4 @@
 import { mountPage } from "@/lib/page";
-import AdminOrganization from "@/pages/AdminOrganization.vue";
+import AdminOrganizationPage from "@/pages/AdminOrganizationPage.vue";
 
-await mountPage(AdminOrganization, { auth: { role: "master" } });
+await mountPage(AdminOrganizationPage, { auth: { role: "master" } });
