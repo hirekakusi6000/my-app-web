@@ -4,6 +4,7 @@ import { onMounted, reactive, ref, useTemplateRef } from "vue";
 
 import { usersApi } from "@/api";
 import CsvImportDialog from "@/components/CsvImportDialog.vue";
+import GettingStarted from "@/components/GettingStarted.vue";
 import SampleDataBanner from "@/components/SampleDataBanner.vue";
 import { type FormErrors, noErrors, toFormErrors } from "@/lib/errors";
 import { generatePassword } from "@/lib/password";
@@ -145,6 +146,8 @@ const remove = () =>
       </div>
     </div>
 
+    <!-- 新しい組織の管理者に、使い始めるまでの手順を案内する -->
+    <GettingStarted :users="list" @create-user="open('create')" />
     <!-- 何もない組織には、お試し用のサンプルデータを案内する -->
     <SampleDataBanner @created="reload" />
 

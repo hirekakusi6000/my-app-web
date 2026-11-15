@@ -798,6 +798,67 @@ a {
   color: var(--color-text);
 }
 
+/* ───────── はじめにすること（新しい組織の管理者向け） ───────── */
+.getting-started {
+  border-color: var(--color-primary);
+}
+
+.getting-started__count {
+  margin-left: 8px;
+  font-size: 0.8125rem;
+  font-weight: normal;
+  color: var(--color-muted);
+}
+
+.getting-started__steps {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.getting-started__step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.getting-started__mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--color-muted);
+}
+
+.getting-started__step--done .getting-started__mark {
+  border-color: var(--color-present);
+  background: var(--color-present);
+  color: #fff;
+}
+
+.getting-started__body {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.getting-started__step--done .getting-started__body strong {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.getting-started__text {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
 /* ───────── メンバー検索 ───────── */
 .search-form {
   display: grid;

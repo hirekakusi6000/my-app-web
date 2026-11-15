@@ -16,8 +16,13 @@ test("マスターが新規登録してサンプルを作成する", async ({ pa
   // 新規登録するとユーザー管理画面に移り、サンプルの案内が出る
   await expect(page).toHaveURL(/\/admin\/users\.html$/);
   await expect(page.locator(".app-header__brand")).toHaveText("テスト株式会社");
+  // 使い始めるまでの手順を案内する
+  const guide = page.locator(".getting-started");
+  await expect(guide).toContainText("はじめにすること");
+  await expect(guide).toContainText("0 / 4 完了");
   await page.getByRole("button", { name: "サンプルを作成" }).click();
   await expect(page.locator("#user-rows tr")).toHaveCount(7); // マスター＋サンプルの6人
+  await expect(guide).toHaveCount(0); // サンプルで手順がすべて終わったので、案内は消える
 
   // マップには在席中・離席中の4人が表示される
   await page.getByRole("link", { name: "マップ", exact: true }).click();
