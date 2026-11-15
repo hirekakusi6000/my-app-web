@@ -174,6 +174,39 @@ test("マップ編集：範囲選択・複製・元に戻す・保存", async ({
   expect(layout.furniture).toHaveLength(25);
 });
 
+test("マップ編集：選んだ家具は形を保ったまま、まとめて回転する", async ({ page, withSample }) => {
+  await login(page, MASTER_EMAIL, MASTER_PASSWORD);
+  await page.goto("/admin/map-editor.html");
+  await expect(page.locator(".furniture")).toHaveCount(18);
+
+  // 机の島A（机1＋椅子6）を範囲選択して、右に回す
+  const box = (await page.locator(".room-map").boundingBox())!;
+  await page.mouse.move(box.x + 1.2 * CELL, box.y + 2.5 * CELL);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 8.6 * CELL, box.y + 7.4 * CELL, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator(".furniture--selected")).toHaveCount(7);
+  await page.keyboard.press("r");
+  await page.getByRole("button", { name: "保存する" }).click();
+  await expect(page.locator("#status")).toHaveText("保存済み");
+
+  const floors = await withSample.get("/floors");
+  const layout = await withSample.get(`/rooms/${floors[0].rooms[0].id}/layout`);
+  const island = layout.furniture.filter((f: { label: string | null }) => f.label?.match(/^(島A|A-\d)$/));
+  const desk = island.find((f: { type: string }) => f.type === "desk");
+  const chairs = island.filter((f: { type: string }) => f.type === "chair");
+  // 机は縦向きになり、椅子は机の左右にぴったり並び、机の方を向く（背もたれが外側）
+  expect(desk.rotation).toBe(90);
+  const deskLeft = desk.x;
+  const deskRight = desk.x + desk.height; // 90度回すと、床に占める幅は元の奥行き
+  for (const c of chairs) {
+    expect([deskLeft - 1, deskRight]).toContain(c.x);
+    expect(c.y).toBeGreaterThanOrEqual(desk.y);
+    expect(c.y).toBeLessThan(desk.y + desk.width);
+    expect(c.rotation).toBe(c.x < deskLeft ? 270 : 90);
+  }
+});
+
 test("スキルでメンバーを探し、マップで場所を表示する", async ({ page, withSample: _ }) => {
   await login(page, MASTER_EMAIL, MASTER_PASSWORD);
   await page.goto("/people.html");
