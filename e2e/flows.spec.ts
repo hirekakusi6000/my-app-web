@@ -130,6 +130,29 @@ test("従業員が初回ログインして、出社・離席・退勤する", as
   await expect(page.locator(".occupant")).toHaveCount(4);
 });
 
+test("パスワードをリセットされた人は、パスワードを変えるだけでマップに進む", async ({ page, withSample }) => {
+  const user = await withSample.post("/users", { email: "reset@example.com", initial_password: "initial-pass-1" });
+  await firstLogin(page, "reset@example.com", "initial-pass-1", "リセット 太郎");
+  await page.getByRole("button", { name: "ログアウト" }).click();
+  await page.waitForURL(/\/login\.html$/);
+
+  // 管理者がパスワードをリセットする
+  await withSample.post(`/users/${user.id}/password-reset`, { new_password: "reset-pass-01" });
+
+  await login(page, "reset@example.com", "reset-pass-01");
+  await expect(page).toHaveURL(/\/setup\.html$/);
+  await expect(page.locator(".steps")).toHaveCount(0); // 手順（プロフィールなど）は出さない
+  await page.getByLabel("現在のパスワード（初期パスワード）").fill("reset-pass-01");
+  await page.locator('[name="new_password"]').fill("my-new-pass-2");
+  await page.locator('[name="new_password_confirm"]').fill("my-new-pass-2");
+  await page.getByRole("button", { name: "変更してはじめる" }).click();
+
+  // プロフィールを登録し直さずにマップへ。プロフィールもそのまま
+  await expect(page).toHaveURL(/\/map\.html$/);
+  const profile = await withSample.get(`/profiles/${user.id}`);
+  expect(profile.name).toBe("リセット 太郎");
+});
+
 test("使用中の座席では出社できない", async ({ page, withSample }) => {
   await withSample.post("/users", { email: "u@example.com", initial_password: "initial-1" });
   await firstLogin(page, "u@example.com", "initial-1", "新人");

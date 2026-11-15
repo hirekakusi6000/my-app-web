@@ -33,8 +33,9 @@ export const authApi = {
   login: (email: string, password: string) => api.post<Me>("/auth/login", { email, password }),
   logout: () => api.post<null>("/auth/logout"),
   me: () => api.get<Me>("/me"),
+  /** 応答の本文はない（204）。変更後の状態は me() で取り直す */
   changePassword: (currentPassword: string, newPassword: string) =>
-    api.put<Me>("/me/password", { current_password: currentPassword, new_password: newPassword }),
+    api.put<null>("/me/password", { current_password: currentPassword, new_password: newPassword }),
 };
 
 export const organizationApi = {
