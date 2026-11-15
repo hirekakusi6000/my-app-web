@@ -1,11 +1,17 @@
 <script setup lang="ts">
-/** 初回設定（一般ユーザー）：① パスワード変更 → ② プロフィール → ③ 技術スキル（エンジニアのみ）→ ④ デフォルト座席 */
+/**
+ * 初回設定（一般ユーザー）：① パスワード変更 → ② プロフィール → ③ 技術スキル（エンジニアのみ）→ ④ デフォルト座席
+ *
+ * 管理者がパスワードをリセットした人もこの画面に来る。その人はプロフィールを登録済みなので、
+ * パスワードを変えたらそのままマップに進む（プロフィールを登録し直させない）。
+ */
 import { onMounted, reactive, ref, useTemplateRef } from "vue";
 
 import { authApi, type MasterData, masterDataApi, profileApi } from "@/api";
 import ProfileFields from "@/components/ProfileFields.vue";
 import SeatPickerDialog from "@/components/SeatPickerDialog.vue";
 import SkillsEditor from "@/components/SkillsEditor.vue";
+import { homePathFor, needsSetup, redirect } from "@/lib/auth";
 import { type FormErrors, noErrors, toFormErrors } from "@/lib/errors";
 import { seatText } from "@/lib/map";
 import { currentUser } from "@/lib/session";
@@ -21,6 +27,8 @@ const STEPS: { step: Step; label: string }[] = [
 ];
 
 const step = ref<Step | null>(null);
+/** 管理者にパスワードをリセットされた人（プロフィールは登録済みで、パスワードの変更だけが必要） */
+const isReset = currentUser().profile_completed;
 const stepIndex = (s: Step) => STEPS.findIndex((x) => x.step === s);
 const errors = ref<FormErrors>(noErrors());
 const sending = ref(false);
@@ -49,6 +57,12 @@ function changePassword() {
   }
   return send(["current_password", "new_password"], async () => {
     await authApi.changePassword(passwords.current, passwords.next);
+    // プロフィールを登録済みなら（パスワードのリセット）、初回設定はここまで
+    const me = await authApi.me();
+    if (!needsSetup(me)) {
+      await redirect(homePathFor(me));
+      return;
+    }
     await startProfileStep();
   });
 }
@@ -135,7 +149,8 @@ onMounted(async () => {
 <template>
   <main class="auth-page">
     <section class="card card--wide">
-      <ol class="steps">
+      <!-- パスワードのリセットでは、パスワードの変更だけなので手順の表示はしない -->
+      <ol v-if="!isReset" class="steps">
         <li
           v-for="s in STEPS"
           :key="s.step"
@@ -147,7 +162,8 @@ onMounted(async () => {
       <!-- ① パスワード変更 -->
       <div v-if="step === 'password'">
         <h1 class="card__title">パスワードの変更</h1>
-        <p class="card__lead">管理者から受け取った初期パスワードを、自分だけのパスワードに変更してください。</p>
+        <p v-if="isReset" class="card__lead">管理者がパスワードをリセットしました。管理者から受け取ったパスワードを、自分だけのパスワードに変更してください。プロフィールなどはそのまま残っています。</p>
+        <p v-else class="card__lead">管理者から受け取った初期パスワードを、自分だけのパスワードに変更してください。</p>
         <form id="password-form" class="form" novalidate @submit.prevent="changePassword">
           <div v-if="errors.form" class="alert alert--error">{{ errors.form }}</div>
           <label class="field">
@@ -166,7 +182,7 @@ onMounted(async () => {
             <input v-model="passwords.confirm" class="field__input" type="password" name="new_password_confirm" autocomplete="new-password" required>
             <span class="field__error">{{ errors.fields.new_password_confirm }}</span>
           </label>
-          <button type="submit" class="button button--block" :disabled="sending">変更して次へ</button>
+          <button type="submit" class="button button--block" :disabled="sending">{{ isReset ? "変更してはじめる" : "変更して次へ" }}</button>
         </form>
       </div>
 
