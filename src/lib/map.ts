@@ -2,7 +2,7 @@
 //
 // 座標はグリッドの単位。家具の x, y は「床に占める範囲」の左上で、
 // 向きが 90 度・270 度のときは幅と奥行きが入れ替わる（サーバー側の定義と同じ）。
-import type { Furniture, FurnitureType, PresenceStatus } from "@/types/api";
+import type { Furniture, FurnitureType, PresenceStatus, Rotation } from "@/types/api";
 
 /** 1マスの大きさ（px） */
 export const CELL = 32;
@@ -38,6 +38,38 @@ export function footprint(item: Pick<Furniture, "width" | "height" | "rotation">
   return item.rotation === 90 || item.rotation === 270
     ? { w: item.height, h: item.width }
     : { w: item.width, h: item.height };
+}
+
+/**
+ * 家具をまとめて90度回転させたあとの位置と向きを返す（元の家具は変えない）。
+ * 選んだ家具全体を囲む四角の中心を軸に回すので、机と椅子の島は形を保ったまま回り、
+ * 1つだけのときはその場で回る。右に回して左に戻す・4回回すと、元の位置にぴったり戻る。
+ * @param clockwise true で右回り（時計回り）、false で左回り
+ */
+export function rotateGroup(
+  items: Pick<Furniture, "x" | "y" | "width" | "height" | "rotation">[],
+  clockwise: boolean,
+): { x: number; y: number; rotation: Rotation }[] {
+  const boxes = items.map((item) => ({ ...footprint(item), x: item.x, y: item.y }));
+  const bx = Math.min(...boxes.map((b) => b.x));
+  const by = Math.min(...boxes.map((b) => b.y));
+  const bw = Math.max(...boxes.map((b) => b.x + b.w)) - bx;
+  const bh = Math.max(...boxes.map((b) => b.y + b.h)) - by;
+  // 回したあとの全体の四角（幅と奥行きが入れ替わる）。中心がなるべく動かないように置く。
+  // Math.trunc を使うと、右回りと左回りでずれる量がちょうど打ち消し合う
+  const nx = bx + Math.trunc((bw - bh) / 2);
+  const ny = by + Math.trunc((bh - bw) / 2);
+  return items.map((item, i) => {
+    const { x, y, w, h } = boxes[i];
+    const rx = x - bx;
+    const ry = y - by;
+    return {
+      // 画面の下向きが y なので、右回りは (左上からの位置) → (下から測った位置, 左から測った位置)
+      x: nx + (clockwise ? bh - (ry + h) : ry),
+      y: ny + (clockwise ? rx : bw - (rx + w)),
+      rotation: ((item.rotation + (clockwise ? 90 : 270)) % 360) as Rotation,
+    };
+  });
 }
 
 /** 画面上の座標をグリッドの座標（小数）に変換する */

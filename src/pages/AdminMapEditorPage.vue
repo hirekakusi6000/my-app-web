@@ -8,9 +8,9 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef }
 import { officesApi } from "@/api";
 import FurnitureShape from "@/components/map/FurnitureShape.vue";
 import RoomMap from "@/components/map/RoomMap.vue";
-import { CELL, clientToGrid, FURNITURE_TYPES, footprint } from "@/lib/map";
+import { CELL, clientToGrid, FURNITURE_TYPES, footprint, rotateGroup } from "@/lib/map";
 import { showToast, toastError } from "@/lib/toast";
-import type { Floor, Furniture, FurnitureType, Room, Rotation } from "@/types/api";
+import type { Floor, Furniture, FurnitureType, Room } from "@/types/api";
 
 const MAX_HISTORY = 100;
 
@@ -169,21 +169,27 @@ function addItem(type: FurnitureType) {
   select([item.key]);
 }
 
+/**
+ * 選んだ家具をまとめて90度回転させる（delta は 90 で右回り、-90 で左回り）。
+ * 全体を囲む四角の中心を軸に回すので、机と椅子の島は形を保ち、1つだけならその場で回る。
+ * 回したあとに部屋からはみ出す場合は、全体を部屋の中に寄せる。部屋に収まらなければ回転しない。
+ */
 function rotateSelected(delta: number) {
   const group = selectedItems.value;
-  if (!group.length) return;
-  const before = cloneItems(items.value);
-  // 1つでも回転できない家具があれば、どれも回転しない
-  const rotations = group.map((item) => ((item.rotation + delta + 360) % 360) as Rotation);
-  if (!group.every((item, i) => fits({ ...item, rotation: rotations[i] }))) {
-    showToast("部屋からはみ出すため回転できません", "error");
+  const r = room.value;
+  if (!group.length || !r) return;
+  const rotated = rotateGroup(group, delta > 0).map((next, i) => ({ ...group[i], ...next }));
+  const boxes = rotated.map((item) => ({ ...footprint(item), x: item.x, y: item.y }));
+  const width = Math.max(...boxes.map((b) => b.x + b.w)) - Math.min(...boxes.map((b) => b.x));
+  const height = Math.max(...boxes.map((b) => b.y + b.h)) - Math.min(...boxes.map((b) => b.y));
+  if (width > r.width || height > r.height) {
+    showToast("回転すると部屋に収まらないため回転できません", "error");
     return;
   }
-  checkpoint(before);
-  group.forEach((item, i) => {
-    item.rotation = rotations[i];
-    clampInto(item);
-  });
+  checkpoint();
+  group.forEach((item, i) => Object.assign(item, { x: rotated[i].x, y: rotated[i].y, rotation: rotated[i].rotation }));
+  // 部屋の端で回して外にはみ出した分は、形を保ったまま内側に寄せる
+  moveGroup(group, 0, 0);
 }
 
 function removeSelected() {
@@ -506,7 +512,8 @@ onBeforeUnmount(() => {
         <li><kbd>Shift</kbd>+クリックで選択に追加・解除</li>
         <li>右下の □ をドラッグで大きさ変更</li>
         <li>矢印キーで1マス移動</li>
-        <li><kbd>R</kbd> で回転、<kbd>Delete</kbd> で削除</li>
+        <li><kbd>R</kbd> で右に回転（<kbd>Shift</kbd>+<kbd>R</kbd> で左）。選んだ家具はまとめて、形を保ったまま回る</li>
+        <li><kbd>Delete</kbd> で削除</li>
         <li><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd> でコピー・貼り付け、<kbd>Ctrl</kbd>+<kbd>D</kbd> で複製</li>
         <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> で元に戻す、<kbd>Ctrl</kbd>+<kbd>Y</kbd> でやり直し</li>
         <li><kbd>Ctrl</kbd>+<kbd>A</kbd> ですべて選択、<kbd>Esc</kbd> で選択解除</li>
